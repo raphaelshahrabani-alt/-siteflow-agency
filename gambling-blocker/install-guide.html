@@ -1,0 +1,337 @@
+<title>Block Gambling Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: one narrow reading column; a device picker, then numbered steps you tick off. */
+:root {
+  --bg: #f3f6f5;
+  --panel: #ffffff;
+  --fg: #16231f;
+  --muted: #55665f;
+  --line: #d5dfdb;
+  --accent: #0b6e5a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe9;
+  --warn: #8a4b00;
+  --warn-soft: #fbeedb;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1614; --panel: #17211e; --fg: #e4eeea; --muted: #9db0a8; --line: #2a3a35;
+    --accent: #4fc4a6; --accent-ink: #062019; --accent-soft: #1b3a32;
+    --warn: #f3b865; --warn-soft: #3a2a14; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1614; --panel: #17211e; --fg: #e4eeea; --muted: #9db0a8; --line: #2a3a35;
+  --accent: #4fc4a6; --accent-ink: #062019; --accent-soft: #1b3a32;
+  --warn: #f3b865; --warn-soft: #3a2a14; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 17px/1.6 var(--body); padding-inline: 16px; }
+.wrap { max-width: 680px; margin: 0 auto; padding-block: 32px 64px; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 7vw, 2.8rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.45rem; font-weight: 800; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 1.08rem; max-width: 60ch; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.78rem; font-weight: 700; color: var(--accent); }
+header { display: grid; gap: 12px; }
+
+.plan { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 10px; }
+.plan ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+
+.picker { display: grid; gap: 10px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab {
+  font: 700 0.98rem var(--body); padding: 10px 16px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--panel); color: var(--fg);
+}
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tab:focus-visible, .step input:focus-visible + span, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.detected { font-size: 0.9rem; color: var(--muted); }
+
+.device { display: grid; gap: 22px; }
+.part { display: grid; gap: 12px; }
+.part-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.part-head .tag { font-size: 0.8rem; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.why { color: var(--muted); }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: s; }
+.step { counter-increment: s; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.step label { display: grid; grid-template-columns: 34px 1fr 26px; gap: 12px; padding: 14px 16px; cursor: pointer; align-items: start; }
+.step label::before {
+  content: counter(s); font: 800 1rem var(--display); width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--accent-soft); color: var(--accent);
+}
+.step .txt { min-width: 0; display: grid; gap: 4px; }
+.step .txt small { color: var(--muted); font-size: 0.92rem; }
+.step input { position: absolute; opacity: 0; pointer-events: none; }
+.step .box { width: 26px; height: 26px; border-radius: 7px; border: 2px solid var(--line); display: grid; place-items: center; margin-top: 4px; }
+.step input:checked ~ .box { background: var(--accent); border-color: var(--accent); }
+.step input:checked ~ .box::after { content: ""; width: 7px; height: 13px; border: solid var(--accent-ink); border-width: 0 3px 3px 0; transform: rotate(45deg) translate(-1px, -2px); }
+.step:has(input:checked) { border-color: var(--accent); }
+.step:has(input:checked) .txt > span { text-decoration: line-through; text-decoration-color: var(--muted); color: var(--muted); }
+
+.path { font-weight: 700; }
+.path i { font-style: normal; color: var(--muted); padding-inline: 4px; }
+.note { background: var(--warn-soft); color: var(--fg); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+.note strong { color: var(--warn); }
+.progress { font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.reset { font: 700 0.9rem var(--body); background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; justify-self: start; }
+
+.help { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 12px; }
+.phone { font: 800 1.4rem var(--display); letter-spacing: 0.01em; user-select: all; }
+a { color: var(--accent); font-weight: 700; }
+footer { color: var(--muted); font-size: 0.9rem; }
+@media (prefers-reduced-motion: no-preference) { .tab, .step { transition: background .15s, border-color .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Gambling blocker setup</span>
+    <h1>Block gambling on your phone and computer</h1>
+    <p class="lede">Pick your device below and follow the steps in order. Tick each one as you finish it. It takes about 10 minutes per device, and you need to do it on every device you own.</p>
+  </header>
+
+  <section class="plan" aria-label="What you will do">
+    <h3>What you will do on each device</h3>
+    <ol>
+      <li>Install BetBlocker, a free blocker run by a registered charity. It blocks gambling websites and apps.</li>
+      <li>Lock it, so it can't be removed on a bad day. For this you need one person you trust to type a passcode you don't know.</li>
+      <li>Test it by opening a betting site and checking that it won't load.</li>
+    </ol>
+    <p class="why">Ask your trusted person before you start. They only need to be there for the lock step.</p>
+  </section>
+
+  <section class="picker">
+    <h2>1. Choose your device</h2>
+    <div class="tabs" role="tablist" aria-label="Device">
+      <button class="tab" role="tab" id="t-iphone" aria-controls="p-iphone" data-dev="iphone">iPhone or iPad</button>
+      <button class="tab" role="tab" id="t-android" aria-controls="p-android" data-dev="android">Android phone</button>
+      <button class="tab" role="tab" id="t-windows" aria-controls="p-windows" data-dev="windows">Windows PC</button>
+      <button class="tab" role="tab" id="t-mac" aria-controls="p-mac" data-dev="mac">Mac</button>
+      <button class="tab" role="tab" id="t-other" aria-controls="p-other" data-dev="other">Chromebook or other</button>
+    </div>
+    <p class="detected" id="detected"></p>
+  </section>
+
+  <!-- iPhone -->
+  <section class="device" id="p-iphone" role="tabpanel" aria-labelledby="t-iphone" hidden>
+    <div class="part">
+      <div class="part-head"><h2>2. Install BetBlocker</h2><span class="tag">iPhone or iPad</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="iphone-1"><div class="txt"><span>Open the <b>App Store</b> and search for <b>BetBlocker</b>.</span><small>The app is called "BetBlocker: Gambling Exclusion". It is free.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="iphone-2"><div class="txt"><span>Tap <b>Get</b>, then open the app.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="iphone-3"><div class="txt"><span>Choose how long to block for. Pick the longest time you can commit to.</span><small>Once it starts, BetBlocker won't let you end the block early.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="iphone-4"><div class="txt"><span>When your iPhone asks to allow a configuration or filter, tap <b>Allow</b>, then enter your phone passcode.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>3. Lock it</h2><span class="tag">Hand the phone to your trusted person</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="iphone-5"><div class="txt"><span>Open <span class="path">Settings<i>›</i>Screen Time</span> and turn it on if it's off.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="iphone-6"><div class="txt"><span>Tap <b>Lock Screen Time Settings</b> (on older iPhones, <b>Use Screen Time Passcode</b>). Your trusted person types a 4‑digit code without showing you.</span><small>Skip the Apple ID recovery screen, or they use their own Apple ID. Otherwise you could reset the code yourself.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="iphone-7"><div class="txt"><span>Go to <span class="path">Content &amp; Privacy Restrictions</span> and turn it on.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="iphone-8"><div class="txt"><span>Tap <span class="path">iTunes &amp; App Store Purchases<i>›</i>Deleting Apps<i>›</i>Don't Allow</span>.</span><small>Now BetBlocker can't be deleted without the code.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="iphone-9"><div class="txt"><span>Go back and tap <span class="path">Installing Apps<i>›</i>Don't Allow</span>, if you want new betting apps blocked from being installed at all.</span><small>Optional. Your trusted person can switch it back on when you need a normal app.</small></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>4. Test it</h2></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="iphone-10"><div class="txt"><span>Open Safari and try a betting site you used to visit. It should not load. Try deleting BetBlocker: it should not let you.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Android -->
+  <section class="device" id="p-android" role="tabpanel" aria-labelledby="t-android" hidden>
+    <div class="part">
+      <div class="part-head"><h2>2. Install BetBlocker</h2><span class="tag">Android phone or tablet</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="android-1"><div class="txt"><span>Open the <b>Google Play Store</b> and search for <b>BetBlocker</b>.</span><small>Check that the developer is BetBlocker. It is free.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="android-2"><div class="txt"><span>Tap <b>Install</b>, then <b>Open</b>.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="android-3"><div class="txt"><span>Choose how long to block for. Pick the longest time you can commit to.</span><small>Once it starts, BetBlocker won't let you end the block early.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="android-4"><div class="txt"><span>Allow every permission the app asks for, including the <b>VPN connection</b> request. Tap <b>OK</b> or <b>Allow</b> each time.</span><small>The VPN is how it filters websites on the phone.</small></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>3. Lock it</h2><span class="tag">Menu names vary a little by brand</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="android-5"><div class="txt"><span>Open <span class="path">Settings<i>›</i>Network &amp; internet<i>›</i>VPN</span>. On Samsung it's <span class="path">Settings<i>›</i>Connections<i>›</i>More connection settings<i>›</i>VPN</span>.</span><small>Can't find it? Type "VPN" in the search bar at the top of Settings.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="android-6"><div class="txt"><span>Tap the gear icon next to <b>BetBlocker</b>. Turn on <b>Always-on VPN</b> and <b>Block connections without VPN</b>.</span><small>If BetBlocker is ever switched off, the phone loses internet instead of letting betting sites through.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="android-7"><div class="txt"><span>Ask your trusted person to go to <span class="path">Play Store<i>›</i>your profile picture<i>›</i>Settings<i>›</i>Family<i>›</i>Parental controls</span>, turn them on, and set a PIN you don't know.</span><small>Set apps to "Rated for 12+" or lower. Most real-money betting apps are rated 18+, so they won't show up to install.</small></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>4. Test it</h2></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="android-8"><div class="txt"><span>Open Chrome and try a betting site you used to visit. It should not load.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Windows -->
+  <section class="device" id="p-windows" role="tabpanel" aria-labelledby="t-windows" hidden>
+    <div class="part">
+      <div class="part-head"><h2>2. Install BetBlocker</h2><span class="tag">Windows 10 or 11</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="windows-1"><div class="txt"><span>Go to <a href="https://betblocker.org" target="_blank" rel="noopener">betblocker.org</a> and download the <b>Windows</b> version.</span><small>Only download it from betblocker.org. Other "BetBlocker for PC" sites are not the real one.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="windows-2"><div class="txt"><span>Open your <b>Downloads</b> folder and double-click the file you just downloaded.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="windows-3"><div class="txt"><span>If a blue box says "Windows protected your PC", click <b>More info</b>, then <b>Run anyway</b>. If it asks "Do you want to allow this app to make changes", click <b>Yes</b>.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="windows-4"><div class="txt"><span>Follow the installer, then choose how long to block for. Pick the longest time you can commit to.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>3. Lock it</h2><span class="tag">Do this with your trusted person</span></div>
+      <p class="why">On a computer, the lock is an administrator password you don't know. Without it, you can't uninstall programs.</p>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="windows-5"><div class="txt"><span>Open <span class="path">Settings<i>›</i>Accounts<i>›</i>Other users</span> (on Windows 10: <span class="path">Family &amp; other users</span>). Click <b>Add account</b>.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="windows-6"><div class="txt"><span>Click <b>I don't have this person's sign-in information</b>, then <b>Add a user without a Microsoft account</b>. Your trusted person picks the name and password.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="windows-7"><div class="txt"><span>Click the new account, then <b>Change account type</b>, and set it to <b>Administrator</b>.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="windows-8"><div class="txt"><span>Sign in to the new account once to check the password works. Then, from it, change <b>your own</b> account type to <b>Standard User</b>.</span><small>Keep using your own account every day. Windows will ask for the other password whenever someone tries to uninstall something.</small></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>4. Test it</h2></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="windows-9"><div class="txt"><span>Sign back in to your own account. Open your browser and try a betting site. It should not load.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Mac -->
+  <section class="device" id="p-mac" role="tabpanel" aria-labelledby="t-mac" hidden>
+    <div class="part">
+      <div class="part-head"><h2>2. Install BetBlocker</h2><span class="tag">macOS 10.15 or newer</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="mac-1"><div class="txt"><span>Go to <a href="https://betblocker.org" target="_blank" rel="noopener">betblocker.org</a> and download the <b>Mac</b> version.</span><small>Only download it from betblocker.org.</small></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="mac-2"><div class="txt"><span>Open <b>Downloads</b>, double-click the file, and follow the installer.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="mac-3"><div class="txt"><span>If the Mac says it can't open the app, go to <span class="path">System Settings<i>›</i>Privacy &amp; Security</span>, scroll down, and click <b>Open Anyway</b>.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="mac-4"><div class="txt"><span>Allow anything it asks for (a network filter or extension), then choose how long to block for.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>3. Lock it</h2><span class="tag">Do this with your trusted person</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="mac-5"><div class="txt"><span>Open <span class="path">System Settings<i>›</i>Users &amp; Groups</span> and click <b>Add User</b>. Make it an <b>Administrator</b>. Your trusted person picks the password.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="mac-6"><div class="txt"><span>Log in to the new account, open <span class="path">Users &amp; Groups</span>, click the <b>i</b> next to your own account, and turn off <b>Allow this user to administer this computer</b>.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="mac-7"><div class="txt"><span>Log back in to your own account. From now on, removing apps or security settings needs their password.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>4. Test it</h2></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="mac-8"><div class="txt"><span>Open Safari or Chrome and try a betting site. It should not load.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Other -->
+  <section class="device" id="p-other" role="tabpanel" aria-labelledby="t-other" hidden>
+    <div class="note"><strong>BetBlocker may not support this device.</strong><span>I couldn't confirm a Chromebook, Linux or games-console version. Check the download page at <a href="https://betblocker.org" target="_blank" rel="noopener">betblocker.org</a> first.</span></div>
+    <div class="part">
+      <div class="part-head"><h2>2. Try the Android app</h2><span class="tag">Chromebooks with Google Play</span></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="other-1"><div class="txt"><span>Open the <b>Play Store</b> on the Chromebook. If it's there, follow the Android steps on this page.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="other-2"><div class="txt"><span>Test it in the Chrome browser, not only inside apps. If betting sites still load in Chrome, the app isn't covering the browser on this device.</span></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+    <div class="part">
+      <div class="part-head"><h2>3. If nothing works</h2></div>
+      <ol class="steps">
+        <li class="step"><label><input type="checkbox" id="other-3"><div class="txt"><span>Ask BetBlocker through the contact form on their site which option fits your device.</span></div><span class="box"></span></label></li>
+        <li class="step"><label><input type="checkbox" id="other-4"><div class="txt"><span>Close your accounts on every betting site and ask each one for permanent self-exclusion.</span><small>This works whatever device you use.</small></div><span class="box"></span></label></li>
+      </ol>
+    </div>
+  </section>
+
+  <p class="progress" id="progress" aria-live="polite"></p>
+  <button class="reset" id="reset" type="button">Clear ticks for this device</button>
+
+  <section class="help">
+    <h2>Also do these once</h2>
+    <p>A blocker covers your devices. These cover everything else.</p>
+    <ol class="steps">
+      <li class="step"><label><input type="checkbox" id="all-1"><div class="txt"><span>Self-exclude from Loto-Québec's casinos and its online site, Mise-o-jeu+, through Loto-Québec's self-exclusion program.</span><small>If you live outside Quebec, your local lottery or gambling regulator has a similar program.</small></div><span class="box"></span></label></li>
+      <li class="step"><label><input type="checkbox" id="all-2"><div class="txt"><span>Ask your bank to block gambling transactions on your cards. Many banks can do this from their app or over the phone.</span></div><span class="box"></span></label></li>
+    </ol>
+    <h3>Free, confidential help in Quebec</h3>
+    <p>Jeu : aide et référence, open 24 hours a day</p>
+    <p class="phone">1-800-461-0140</p>
+  </section>
+
+  <footer>Every device needs its own setup. When you get a new phone or computer, open this page again and repeat the steps before you install anything else.</footer>
+</div>
+
+<script>
+(function () {
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+  const tabs = [...document.querySelectorAll('.tab')];
+  const names = { iphone: 'iPhone or iPad', android: 'Android phone', windows: 'Windows PC', mac: 'Mac', other: 'Chromebook or other' };
+
+  function guess() {
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iphone';
+    if (/CrOS/.test(ua)) return 'other';
+    if (/Android/.test(ua)) return 'android';
+    if (/Windows/.test(ua)) return 'windows';
+    if (/Macintosh/.test(ua)) return 'mac';
+    return null;
+  }
+
+  let current;
+  function show(dev) {
+    current = dev;
+    tabs.forEach(t => {
+      const on = t.dataset.dev === dev;
+      t.setAttribute('aria-selected', on);
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById('p-' + t.dataset.dev).hidden = !on;
+    });
+    store.set('bb-device', dev);
+    update();
+  }
+
+  function update() {
+    const boxes = [...document.querySelectorAll('#p-' + current + ' input')];
+    const done = boxes.filter(b => b.checked).length;
+    document.getElementById('progress').textContent =
+      done === boxes.length ? names[current] + ': all ' + boxes.length + ' steps done.' :
+      names[current] + ': ' + done + ' of ' + boxes.length + ' steps done.';
+  }
+
+  document.querySelectorAll('.step input').forEach(b => {
+    b.checked = store.get('bb-' + b.id) === '1';
+    b.addEventListener('change', () => { b.checked ? store.set('bb-' + b.id, '1') : store.del('bb-' + b.id); update(); });
+  });
+
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.dev));
+    t.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      const n = tabs[(i + d + tabs.length) % tabs.length];
+      n.focus(); show(n.dataset.dev);
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
+    document.querySelectorAll('#p-' + current + ' input').forEach(b => { b.checked = false; store.del('bb-' + b.id); });
+    update();
+  });
+
+  const g = guess();
+  if (g) document.getElementById('detected').textContent = 'This looks like a ' + names[g] + ', so those steps are open. Tap another device if that’s wrong.';
+  show(store.get('bb-device') || g || 'iphone');
+})();
+</script>
